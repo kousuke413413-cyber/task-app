@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus & Task Manager</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card-bg: #ffffff;
+      --text: #333333;
+      --primary: #4a90e2;
+      --accent: #2ecc71;
+    }
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+      margin: 0;
+    }
+    .container {
+      background: var(--card-bg);
+      max-width: 480px;
+      width: 100%;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    h1 { font-size: 1.5rem; margin-top: 0; text-align: center; }
+    .timer-section {
+      text-align: center;
+      background: #f9fbfd;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    .timer-display { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin: 10px 0; }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button:hover { opacity: 0.9; }
+    .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      outline: none;
+    }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    li.completed { text-decoration: line-through; opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Focus & Task Manager</h1>
+    
+    <!-- タイマー機能 -->
+    <div class="timer-section">
+      <div class="timer-display" id="timer">25:00</div>
+      <button id="start-btn">スタート</button>
+      <button id="reset-btn" style="background:#e74c3c;">リセット</button>
+    </div>
+
+    <!-- タスク入力 -->
+    <div class="input-group">
+      <input type="text" id="task-input" placeholder="新しいタスクを入力...">
+      <button id="add-btn">追加</button>
+    </div>
+
+    <!-- タスクリスト -->
+    <ul id="task-list"></ul>
+  </div>
+
+  <script>
+    // タイマー処理
+    let timeLeft = 1500;
+    let timerId = null;
+
+    const timerDisplay = document.getElementById('timer');
+    const startBtn = document.getElementById('start-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
+    function updateTimer() {
+      const min = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+      const sec = String(timeLeft % 60).padStart(2, '0');
+      timerDisplay.textContent = `${min}:${sec}`;
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+        startBtn.textContent = 'スタート';
+      } else {
+        timerId = setInterval(() => {
+          if (timeLeft > 0) {
+            timeLeft--;
+            updateTimer();
+          } else {
+            clearInterval(timerId);
+            alert('集中タイム終了！休憩しましょう。');
+          }
+        }, 1000);
+        startBtn.textContent = '一時停止';
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerId);
+      timerId = null;
+      timeLeft = 1500;
+      updateTimer();
+      startBtn.textContent = 'スタート';
+    });
+
+    // タスク管理処理（LocalStorage連携）
+    const taskInput = document.getElementById('task-input');
+    const addBtn = document.getElementById('add-btn');
+    const taskList = document.getElementById('task-list');
+
+    let tasks = JSON.parse(localStorage.getItem('myTasks') || '[]');
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        if (task.done) li.classList.add('completed');
+        li.innerHTML = `
+          <span onclick="toggleTask(${index})" style="cursor:pointer;">${task.text}</span>
+          <button onclick="deleteTask(${index})" style="background:#ccc; padding:4px 8px; font-size:0.8rem;">削除</button>
+        `;
+        taskList.appendChild(li);
+      });
+      localStorage.setItem('myTasks', JSON.stringify(tasks));
+    }
+
+    addBtn.addEventListener('click', () => {
+      if (!taskInput.value.trim()) return;
+      tasks.push({ text: taskInput.value, done: false });
+      taskInput.value = '';
+      renderTasks();
+    });
+
+    window.toggleTask = (index) => {
+      tasks[index].done = !tasks[index].done;
+      renderTasks();
+    };
+
+    window.deleteTask = (index) => {
+      tasks.splice(index, 1);
+      renderTasks();
+    };
+
+    renderTasks();
+  </script>
+</body>
+</html>
