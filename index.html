@@ -3,172 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Focus & Task Manager</title>
+  <title>シンプルTodoマネージャー</title>
   <style>
-    :root {
-      --bg: #f4f6f8;
-      --card-bg: #ffffff;
-      --text: #333333;
-      --primary: #4a90e2;
-      --accent: #2ecc71;
-    }
     body {
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      padding: 40px 20px;
-      margin: 0;
+      font-family: sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
     }
     .container {
-      background: var(--card-bg);
-      max-width: 480px;
-      width: 100%;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    }
-    h1 { font-size: 1.5rem; margin-top: 0; text-align: center; }
-    .timer-section {
-      text-align: center;
-      background: #f9fbfd;
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
       padding: 20px;
       border-radius: 8px;
-      margin-bottom: 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .timer-display { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin: 10px 0; }
-    button {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
+    h1 {
+      font-size: 1.2rem;
+      color: #333;
     }
-    button:hover { opacity: 0.9; }
-    .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
-    input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      outline: none;
+    .task-list {
+      list-style: none;
+      padding: 0;
     }
-    ul { list-style: none; padding: 0; margin: 0; }
-    li {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .task-item {
       padding: 10px;
       border-bottom: 1px solid #eee;
+      color: #555;
     }
-    li.completed { text-decoration: line-through; opacity: 0.6; }
+    .task-item::before {
+      content: "□ ";
+      color: #ccc;
+    }
   </style>
 </head>
 <body>
+
   <div class="container">
-    <h1>Focus & Task Manager</h1>
-    
-    <!-- タイマー機能 -->
-    <div class="timer-section">
-      <div class="timer-display" id="timer">25:00</div>
-      <button id="start-btn">スタート</button>
-      <button id="reset-btn" style="background:#e74c3c;">リセット</button>
-    </div>
-
-    <!-- タスク入力 -->
-    <div class="input-group">
-      <input type="text" id="task-input" placeholder="新しいタスクを入力...">
-      <button id="add-btn">追加</button>
-    </div>
-
-    <!-- タスクリスト -->
-    <ul id="task-list"></ul>
+    <h1>未完了のタスク一覧</h1>
+    <!-- ここにJavaScriptでタスクが追加されます -->
+    <ul id="taskList" class="task-list"></ul>
   </div>
 
   <script>
-    // タイマー処理
-    let timeLeft = 1500;
-    let timerId = null;
+    // 1. データの準備
+    let tasks = [
+      { name: '牛乳を買う',    isDone: false },
+      { name: '風呂掃除をする', isDone: true  },
+      { name: '本を読む',      isDone: false },
+    ];
 
-    const timerDisplay = document.getElementById('timer');
-    const startBtn = document.getElementById('start-btn');
-    const resetBtn = document.getElementById('reset-btn');
-
-    function updateTimer() {
-      const min = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-      const sec = String(timeLeft % 60).padStart(2, '0');
-      timerDisplay.textContent = `${min}:${sec}`;
+    // 2. 状態判定用の関数（先ほど学習した内容）
+    function isDone(task) {
+      return task.isDone;
+    }
+    function isNotDone(task) {
+      return !isDone(task);
     }
 
-    startBtn.addEventListener('click', () => {
-      if (timerId) {
-        clearInterval(timerId);
-        timerId = null;
-        startBtn.textContent = 'スタート';
-      } else {
-        timerId = setInterval(() => {
-          if (timeLeft > 0) {
-            timeLeft--;
-            updateTimer();
-          } else {
-            clearInterval(timerId);
-            alert('集中タイム終了！休憩しましょう。');
-          }
-        }, 1000);
-        startBtn.textContent = '一時停止';
-      }
-    });
-
-    resetBtn.addEventListener('click', () => {
-      clearInterval(timerId);
-      timerId = null;
-      timeLeft = 1500;
-      updateTimer();
-      startBtn.textContent = 'スタート';
-    });
-
-    // タスク管理処理（LocalStorage連携）
-    const taskInput = document.getElementById('task-input');
-    const addBtn = document.getElementById('add-btn');
-    const taskList = document.getElementById('task-list');
-
-    let tasks = JSON.parse(localStorage.getItem('myTasks') || '[]');
-
+    // 3. 画面に描画する処理
     function renderTasks() {
-      taskList.innerHTML = '';
-      tasks.forEach((task, index) => {
+      const listElement = document.getElementById('taskList');
+      
+      // 未完了のタスクだけを filter で抽出
+      const activeTasks = tasks.filter(isNotDone);
+
+      // 抽出したタスクを map のようにループして HTML 要素を作成
+      activeTasks.forEach(task => {
         const li = document.createElement('li');
-        if (task.done) li.classList.add('completed');
-        li.innerHTML = `
-          <span onclick="toggleTask(${index})" style="cursor:pointer;">${task.text}</span>
-          <button onclick="deleteTask(${index})" style="background:#ccc; padding:4px 8px; font-size:0.8rem;">削除</button>
-        `;
-        taskList.appendChild(li);
+        li.className = 'task-item';
+        li.textContent = task.name; // 「牛乳を買う」「本を読む」がセットされる
+        listElement.appendChild(li);
       });
-      localStorage.setItem('myTasks', JSON.stringify(tasks));
     }
 
-    addBtn.addEventListener('click', () => {
-      if (!taskInput.value.trim()) return;
-      tasks.push({ text: taskInput.value, done: false });
-      taskInput.value = '';
-      renderTasks();
-    });
-
-    window.toggleTask = (index) => {
-      tasks[index].done = !tasks[index].done;
-      renderTasks();
-    };
-
-    window.deleteTask = (index) => {
-      tasks.splice(index, 1);
-      renderTasks();
-    };
-
+    // 処理を実行
     renderTasks();
   </script>
+
+git mv index.html2 index.html
+git commit -m "Rename index.html2 to index.html"
+git push
 </body>
 </html>
