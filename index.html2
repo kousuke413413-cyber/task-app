@@ -81,5 +81,8 @@
     renderTasks();
   </script>
 
+git mv index.html2 index.html
+git commit -m "Rename index.html2 to index.html"
+git push
 </body>
 </html>
