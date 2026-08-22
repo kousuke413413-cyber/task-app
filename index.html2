@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>シンプルTodoマネージャー</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .task-list {
+      list-style: none;
+      padding: 0;
+    }
+    .task-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      color: #555;
+    }
+    .task-item::before {
+      content: "□ ";
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>未完了のタスク一覧</h1>
+    <!-- ここにJavaScriptでタスクが追加されます -->
+    <ul id="taskList" class="task-list"></ul>
+  </div>
+
+  <script>
+    // 1. データの準備
+    let tasks = [
+      { name: '牛乳を買う',    isDone: false },
+      { name: '風呂掃除をする', isDone: true  },
+      { name: '本を読む',      isDone: false },
+    ];
+
+    // 2. 状態判定用の関数（先ほど学習した内容）
+    function isDone(task) {
+      return task.isDone;
+    }
+    function isNotDone(task) {
+      return !isDone(task);
+    }
+
+    // 3. 画面に描画する処理
+    function renderTasks() {
+      const listElement = document.getElementById('taskList');
+      
+      // 未完了のタスクだけを filter で抽出
+      const activeTasks = tasks.filter(isNotDone);
+
+      // 抽出したタスクを map のようにループして HTML 要素を作成
+      activeTasks.forEach(task => {
+        const li = document.createElement('li');
+        li.className = 'task-item';
+        li.textContent = task.name; // 「牛乳を買う」「本を読む」がセットされる
+        listElement.appendChild(li);
+      });
+    }
+
+    // 処理を実行
+    renderTasks();
+  </script>
+
+</body>
+</html>
